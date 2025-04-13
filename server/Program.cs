@@ -1,41 +1,43 @@
+using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
+using server.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// Load environment variables from the .env file
+Env.Load();
+
+// Add environment variables to configuration
+builder.Configuration["DATABASE_SERVER"] = Environment.GetEnvironmentVariable("DATABASE_SERVER");
+builder.Configuration["DATABASE_NAME"] = Environment.GetEnvironmentVariable("DATABASE_NAME");
+builder.Configuration["DATABASE_USER"] = Environment.GetEnvironmentVariable("DATABASE_USER");
+builder.Configuration["DATABASE_PASSWORD"] = Environment.GetEnvironmentVariable("DATABASE_PASSWORD");
+
+// Build connection string from environment variables
+var connectionString = $"Server={builder.Configuration["DATABASE_SERVER"]};Database={builder.Configuration["DATABASE_NAME"]};User Id={builder.Configuration["DATABASE_USER"]};Password={builder.Configuration["DATABASE_PASSWORD"]};TrustServerCertificate=True;";
+builder.Configuration["ConnectionStrings:DefaultConnection"] = connectionString;
+
+// Log the connection string (for debugging, remove in production)
+Console.WriteLine($"Connection String: {connectionString}");
+
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Configure DbContext with SQL Server and connection string
+builder.Services.AddDbContext<ApplicationDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Enable Swagger in development environment
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();  // Enable Swagger JSON endpoint
+    app.UseSwaggerUI();  // Enable Swagger UI (interactive API documentation)
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
