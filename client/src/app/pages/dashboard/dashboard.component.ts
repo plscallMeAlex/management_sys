@@ -60,8 +60,8 @@ import { CommonModule } from '@angular/common';
           class="grid grid-cols-4 bg-gray-100 px-4 py-3 text-sm text-gray-500"
         >
           <div>Name</div>
+          <div></div>
           <div>Create Date</div>
-          <div>Role</div>
           <div>Action</div>
         </div>
 
@@ -76,15 +76,15 @@ import { CommonModule } from '@angular/common';
             </div>
             <div class="text-xs text-gray-500">{{ user.email }}</div>
           </div>
-          <div class="text-sm text-gray-600">
-            {{ user.createdAt | date: 'd MMM, yyyy' }}
-          </div>
           <div>
             <span
               class="inline-block w-20 rounded-full bg-blue-500 px-3 py-2 text-center text-sm text-white"
             >
               {{ user.role.name }}
             </span>
+          </div>
+          <div class="text-sm text-gray-600">
+            {{ user.createdAt | date: 'd MMM, yyyy' }}
           </div>
           <div class="flex space-x-2">
             <button class="text-blue-500 hover:text-blue-700">
