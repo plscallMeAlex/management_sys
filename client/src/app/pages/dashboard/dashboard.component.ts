@@ -53,9 +53,13 @@ import { CommonModule } from '@angular/common';
           </div>
         </div>
       </div>
+
       <!-- table of users -->
-      <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+      <div class="mt-6 overflow-hidden rounded-lg bg-white shadow-sm">
         <!-- Table Header -->
+        <div class="bg-white px-4 py-3">
+          <h1 class="text-lg">List Users</h1>
+        </div>
         <div
           class="grid grid-cols-4 bg-gray-100 px-4 py-3 text-sm text-gray-500"
         >
