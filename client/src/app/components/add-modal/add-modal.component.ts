@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
   template: `
     <div
       *ngIf="isOpen"
-      class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-gray-500"
+      class="bg-opacity-30 fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-sm"
     >
       <div class="w-full max-w-4xl rounded-md bg-white shadow-lg">
         <div class="flex items-center justify-between border-b p-4">

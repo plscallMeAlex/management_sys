@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { User } from '../../models/user_md';
+import { AddModalComponent } from '../../components/add-modal/add-modal.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule],
+  imports: [CommonModule, MatIconModule, FormsModule, AddModalComponent],
   template: `
     <div>
       <h1 class="mb-5 text-2xl font-bold text-[#4A85F6]">Users Dashboard</h1>
@@ -27,6 +28,7 @@ import { User } from '../../models/user_md';
         <div class="ml-6 flex w-[40%] items-center justify-evenly">
           <button
             class="text-md flex h-11 w-30 items-center justify-center rounded-lg bg-[#4A85F6] text-white hover:bg-[#86a6e2]"
+            (click)="openUserModal()"
           >
             Add User
             <mat-icon class="ml-3">add</mat-icon>
@@ -143,6 +145,10 @@ import { User } from '../../models/user_md';
           >
         </div>
       </div>
+      <app-add-modal
+        [isOpen]="isUserModalOpen"
+        (closeModal)="closeUserModal()"
+      ></app-add-modal>
     </div>
   `,
   styles: [
@@ -162,6 +168,7 @@ export class DashboardComponent implements OnInit {
   endUser: number = 0;
   canGoForward: boolean = false;
   canGoBackward: boolean = false;
+  isUserModalOpen: boolean = false;
 
   constructor(private dashboardService: DashboardService) {}
 
@@ -205,5 +212,13 @@ export class DashboardComponent implements OnInit {
       this.dashboardService.prevPage();
       this.updatePaginationInfo();
     }
+  }
+
+  openUserModal(): void {
+    this.isUserModalOpen = true;
+  }
+
+  closeUserModal(): void {
+    this.isUserModalOpen = false;
   }
 }
