@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { Role } from '../../models/role_md';
 
 @Component({
   selector: 'app-add-modal',
@@ -27,6 +28,7 @@ import { MatIconModule } from '@angular/material/icon';
             >
             <input
               type="text"
+              placeholder="User ID *"
               class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
@@ -38,6 +40,7 @@ import { MatIconModule } from '@angular/material/icon';
               >
               <input
                 type="text"
+                placeholder="First Name *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -47,18 +50,20 @@ import { MatIconModule } from '@angular/material/icon';
               >
               <input
                 type="text"
+                placeholder="Last Name *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
           </div>
 
-          <div class="mb-4 grid grid-cols-2 gap-4">
+          <div class="mb-4 grid grid-cols-3 gap-4">
             <div>
               <label class="mb-1 block text-sm font-medium"
                 >Email ID <span class="text-red-500">*</span></label
               >
               <input
                 type="email"
+                placeholder="Email ID *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -66,8 +71,21 @@ import { MatIconModule } from '@angular/material/icon';
               <label class="mb-1 block text-sm font-medium">Mobile No</label>
               <input
                 type="text"
+                plcaceholder="Mobile No"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium">Role</label>
+              <select
+                [(ngModel)]="selectedRole"
+                class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option [ngValue]="null" disabled>Select Role Type</option>
+                <option *ngFor="let role of roles" [ngValue]="role">
+                  {{ role.name }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -78,6 +96,7 @@ import { MatIconModule } from '@angular/material/icon';
               >
               <input
                 type="text"
+                placeholder="Username *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -87,6 +106,7 @@ import { MatIconModule } from '@angular/material/icon';
               >
               <input
                 type="password"
+                placeholder="Password *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -96,6 +116,7 @@ import { MatIconModule } from '@angular/material/icon';
               >
               <input
                 type="password"
+                placeholder="Confirm Password *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -184,6 +205,15 @@ import { MatIconModule } from '@angular/material/icon';
 export class AddModalComponent {
   @Input() isOpen = false;
   @Output() closeModal = new EventEmitter<void>();
+
+  roles: Role[] = [
+    new Role('1', 'Super Admin'),
+    new Role('2', 'Admin'),
+    new Role('3', 'Employee'),
+    new Role('4', 'User'),
+  ];
+
+  selectedRole: Role | null = null;
 
   close() {
     this.closeModal.emit();
