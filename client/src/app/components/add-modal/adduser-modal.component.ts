@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Role } from '../../models/role_md';
+import { Permission } from '../../models/permission_md';
 
 @Component({
   selector: 'app-adduser-modal',
@@ -21,7 +22,7 @@ import { Role } from '../../models/role_md';
           </button>
         </div>
 
-        <div class="p-6">
+        <div class="px-6 pt-6">
           <div class="mb-4">
             <label class="mb-1 block text-sm font-medium"
               >User ID <span class="text-red-500">*</span></label
@@ -121,65 +122,65 @@ import { Role } from '../../models/role_md';
               />
             </div>
           </div>
-
-          <div class="rounded-md bg-gray-100 p-4">
-            <div class="mb-2 flex items-center font-medium text-gray-600">
-              <div class="w-1/4">Module Permission</div>
-              <div class="w-1/4 text-center">Read</div>
-              <div class="w-1/4 text-center">Write</div>
-              <div class="w-1/4 text-center">Delete</div>
+        </div>
+        <div
+          class="flex h-16 items-center bg-[#EFF4FA] font-medium text-gray-600"
+        >
+          <div class="w-1/4 text-center">Module Permission</div>
+          <div class="w-1/4 text-center">Read</div>
+          <div class="w-1/4 text-center">Write</div>
+          <div class="w-1/4 text-center">Delete</div>
+        </div>
+        <div class="mb-2 w-full px-2">
+          <div class="flex items-center border-b border-gray-200 py-3">
+            <div class="w-1/4">Super Admin</div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
             </div>
-
-            <div class="flex items-center border-b border-gray-200 py-3">
-              <div class="w-1/4">Super Admin</div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
             </div>
-
-            <div class="flex items-center border-b border-gray-200 py-3">
-              <div class="w-1/4">Admin</div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" class="h-5 w-5 text-blue-600" />
-              </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
             </div>
+          </div>
 
-            <div class="flex items-center border-b border-gray-200 py-3">
-              <div class="w-1/4">Employee</div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" class="h-5 w-5 text-blue-600" />
-              </div>
+          <div class="flex items-center border-b border-gray-200 py-3">
+            <div class="w-1/4">Admin</div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
             </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" class="h-5 w-5 text-blue-600" />
+            </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" class="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
 
-            <div class="flex items-center py-3">
-              <div class="w-1/4">Lorem Ipsum</div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
-              <div class="flex w-1/4 justify-center">
-                <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-              </div>
+          <div class="flex items-center border-b border-gray-200 py-3">
+            <div class="w-1/4">Employee</div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
+            </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" class="h-5 w-5 text-blue-600" />
+            </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" class="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+
+          <div class="flex items-center py-3">
+            <div class="w-1/4">Lorem Ipsum</div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
+            </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
+            </div>
+            <div class="flex w-1/4 justify-center">
+              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
             </div>
           </div>
         </div>
@@ -213,6 +214,11 @@ export class AddModalComponent {
     new Role('4', 'User'),
   ];
 
+  permissions: Permission[] = [
+    new Permission('1', 'SuperAdmin'),
+    new Permission('2', 'Admin'),
+    new Permission('3', 'Employee'),
+  ];
   selectedRole: Role | null = null;
 
   close() {
