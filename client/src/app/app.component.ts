@@ -7,9 +7,16 @@ import { HeaderComponent } from './components/header/header.component';
   selector: 'app-root',
   imports: [RouterOutlet, SidebarComponent, HeaderComponent],
   template: `
-    <!-- <app-sidebar></app-sidebar> -->
-    <app-header></app-header>
-    <router-outlet />
+    <div class="flex h-screen">
+      <app-sidebar></app-sidebar>
+
+      <div class="flex flex-1 flex-col">
+        <app-header></app-header>
+        <div class="flex-1 overflow-auto p-4">
+          <router-outlet></router-outlet>
+        </div>
+      </div>
+    </div>
   `,
   styles: [],
 })
