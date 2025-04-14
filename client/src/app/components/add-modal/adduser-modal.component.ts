@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Role } from '../../models/role_md';
 
 @Component({
-  selector: 'app-add-modal',
+  selector: 'app-adduser-modal',
   imports: [MatIconModule, CommonModule, FormsModule],
   standalone: true,
   template: `

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { User } from '../../models/user_md';
-import { AddModalComponent } from '../../components/add-modal/add-modal.component';
+import { AddModalComponent } from '../../components/add-modal/adduser-modal.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -145,10 +145,10 @@ import { AddModalComponent } from '../../components/add-modal/add-modal.componen
           >
         </div>
       </div>
-      <app-add-modal
+      <app-adduser-modal
         [isOpen]="isUserModalOpen"
         (closeModal)="closeUserModal()"
-      ></app-add-modal>
+      ></app-adduser-modal>
     </div>
   `,
   styles: [
