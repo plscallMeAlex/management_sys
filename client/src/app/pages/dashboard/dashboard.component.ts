@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { User } from '../../models/user_md';
-import { Permission } from '../../models/permission_md';
-import { Role } from '../../models/role_md';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DashboardService } from '../../services/dashboard.service';
+import { User } from '../../models/user_md';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, MatIconModule],
+  standalone: true,
+  imports: [CommonModule, MatIconModule, FormsModule],
   template: `
     <div>
       <h1 class="mb-5 text-2xl font-bold text-[#4A85F6]">Users Dashboard</h1>
@@ -71,7 +72,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Table Rows -->
         <div
-          *ngFor="let user of users"
+          *ngFor="let user of displayedUsers"
           class="grid grid-cols-4 items-center border-b px-4 py-4"
         >
           <div>
@@ -100,84 +101,109 @@ import { CommonModule } from '@angular/common';
           </div>
         </div>
       </div>
+
+      <!-- Page selection -->
+      <div class="mt-6 flex items-center justify-center">
+        <label class="px-3 text-[#717171]">Items per page:</label>
+        <!-- select option from 1-6 -->
+        <select
+          [(ngModel)]="itemsPerPage"
+          (change)="onItemsPerPageChange()"
+          class="ml-2 rounded-md border border-[#717171] bg-white p-1 px-2 text-[#717171]"
+        >
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+        <div class="px-3 text-sm text-[#717171]">
+          {{ startUser + 1 }}-{{ endUser }} of
+          {{ totalUsers }}
+        </div>
+        <div class="flex items-center px-3 text-[#717171]">
+          <mat-icon
+            class="cursor-pointer"
+            [ngClass]="{
+              'text-[#717171]': canGoBackward,
+              'text-gray-300': !canGoBackward,
+            }"
+            (click)="prevPage()"
+            >chevron_left</mat-icon
+          >
+          <mat-icon
+            class="cursor-pointer"
+            [ngClass]="{
+              'text-[#717171]': canGoForward,
+              'text-gray-300': !canGoForward,
+            }"
+            (click)="nextPage()"
+            >chevron_right</mat-icon
+          >
+        </div>
+      </div>
     </div>
   `,
-  styles: ``,
+  styles: [
+    `
+      .grid-cols-4 {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 0.5fr;
+      }
+    `,
+  ],
 })
-export class DashboardComponent {
-  users: Array<User> = [
-    new User(
-      'u1',
-      'jdoe',
-      'John',
-      'Doe',
-      'jdoe@example.com',
-      new Date('2023-01-01'),
-      new Role('r1', 'Admin'),
-      [
-        new Permission('p1', 'Users', true, true, true),
-        new Permission('p2', 'Settings', true, false, false),
-      ],
-      '+1234567890',
-    ),
-    new User(
-      'u2',
-      'asmith',
-      'Alice',
-      'Smith',
-      'asmith@example.com',
-      new Date('2023-02-10'),
-      new Role('r2', 'Editor'),
-      [
-        new Permission('p3', 'Documents', true, true, false),
-        new Permission('p4', 'Photos', true, false, false),
-      ],
-      '+1987654321',
-    ),
-    new User(
-      'u3',
-      'bwayne',
-      'Bruce',
-      'Wayne',
-      'bwayne@example.com',
-      new Date('2023-03-05'),
-      new Role('r3', 'Viewer'),
-      [new Permission('p5', 'Reports', true, false, false)],
-    ),
-    new User(
-      'u4',
-      'ckent',
-      'Clark',
-      'Kent',
-      'ckent@example.com',
-      new Date('2023-04-20'),
-      new Role('r1', 'Admin'),
-      [
-        new Permission('p6', 'Dashboard', true, true, true),
-        new Permission('p7', 'Analytics', true, true, true),
-      ],
-      '+1122334455',
-    ),
-    new User(
-      'u5',
-      'dprince',
-      'Diana',
-      'Prince',
-      'dprince@example.com',
-      new Date('2023-05-18'),
-      new Role('r2', 'Editor'),
-      [new Permission('p8', 'Articles', true, true, true)],
-    ),
-    new User(
-      'u6',
-      'p.parker',
-      'Peter',
-      'Parker',
-      'pparker@example.com',
-      new Date('2023-06-22'),
-      new Role('r3', 'Viewer'),
-      [new Permission('p9', 'Media', true, false, false)],
-      '+1098765432',
-    ),
-  ];
+export class DashboardComponent implements OnInit {
+  displayedUsers: User[] = [];
+  itemsPerPage: number = 6;
+  totalUsers: number = 0;
+  startUser: number = 0;
+  endUser: number = 0;
+  canGoForward: boolean = false;
+  canGoBackward: boolean = false;
+
+  constructor(private dashboardService: DashboardService) {}
+
+  ngOnInit(): void {
+    // Subscribe to the displayed users from the service
+    this.dashboardService.displayedUsers$.subscribe((users) => {
+      this.displayedUsers = users;
+    });
+
+    // Get total users count
+    this.dashboardService.users$.subscribe((users) => {
+      this.totalUsers = users.length;
+    });
+
+    // Initialize pagination
+    this.updatePaginationInfo();
+  }
+
+  updatePaginationInfo(): void {
+    this.startUser = this.dashboardService.startUser;
+    this.endUser = this.dashboardService.endUser;
+    this.itemsPerPage = this.dashboardService.itemsPerPage;
+    this.canGoForward = this.dashboardService.canGoForward();
+    this.canGoBackward = this.dashboardService.canGoBackward();
+  }
+
+  onItemsPerPageChange(): void {
+    this.dashboardService.setItemsPerPage(this.itemsPerPage);
+    this.updatePaginationInfo();
+  }
+
+  nextPage(): void {
+    if (this.canGoForward) {
+      this.dashboardService.nextPage();
+      this.updatePaginationInfo();
+    }
+  }
+
+  prevPage(): void {
+    if (this.canGoBackward) {
+      this.dashboardService.prevPage();
+      this.updatePaginationInfo();
+    }
+  }
 }
