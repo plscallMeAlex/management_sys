@@ -149,7 +149,6 @@ import { User } from '../../models/user_md';
                   class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   [ngClass]="{ 'border-red-500': isFieldInvalid('username') }"
                   (blur)="checkUsername()"
-                  [readonly]="isEditMode"
                 />
                 <div
                   *ngIf="isFieldInvalid('username')"

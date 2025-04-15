@@ -19,7 +19,6 @@ import { User } from '../../models/user_md';
 export class AdduserModalService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:5083/api/Users';
-  private updateApiUrl = 'http://localhost:5043/api/Users';
   private permissionsSubject = new BehaviorSubject<Permission[]>([]);
   permissions$ = this.permissionsSubject.asObservable();
 
@@ -216,8 +215,8 @@ export class AdduserModalService {
       delete updatePayload.password;
     }
 
-    const updateUrl = `${this.updateApiUrl}/${userData.id}`;
-
+    const updateUrl = `${this.apiUrl}/${userData.id}`;
+    console.log('Update Payload:', updatePayload);
     return this.http.put<any>(updateUrl, updatePayload).pipe(
       map((responseData) => {
         console.log('Server response for update:', responseData);
