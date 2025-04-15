@@ -34,20 +34,13 @@ export class AdduserModalService {
   private usersSubject = new BehaviorSubject<User[]>([]);
 
   constructor() {
-    // Fetch permissions when service is initialized
     this.fetchPermissions();
   }
 
-  /**
-   * Get all users as an observable
-   */
   getUsers(): Observable<User[]> {
     return this.usersSubject.asObservable();
   }
 
-  /**
-   * Fetch permissions from the backend
-   */
   fetchPermissions(): void {
     const url = 'http://localhost:5083/api/Permissions';
 
@@ -78,11 +71,6 @@ export class AdduserModalService {
     });
   }
 
-  /**
-   * Get default permissions for a role
-   * @param roleId The role ID
-   * @returns Array of permissions with default values for the role
-   */
   getDefaultPermissionsForRole(roleId: string): Permission[] {
     // Get current permissions
     const currentPermissions = this.permissionsSubject.getValue();
@@ -109,11 +97,6 @@ export class AdduserModalService {
     }
   }
 
-  /**
-   * Add a new user
-   * @param userData The user data from the form
-   * @returns The created user object
-   */
   createUser(userData: {
     userId: string;
     firstName: string;
@@ -189,11 +172,6 @@ export class AdduserModalService {
     );
   }
 
-  /**
-   * Update an existing user
-   * @param userData The user data to update
-   * @returns The updated user object
-   */
   updateUser(userData: {
     id: string;
     firstName: string;
@@ -264,11 +242,6 @@ export class AdduserModalService {
     );
   }
 
-  /**
-   * Map permission IDs to full Permission objects with correct attributes
-   * @param permissionIds Array of permission IDs
-   * @returns Array of Permission objects
-   */
   private mapPermissionIdsToObjects(permissionIds: string[]): Permission[] {
     const allPermissions = this.permissionsSubject.getValue();
 
@@ -291,12 +264,6 @@ export class AdduserModalService {
     });
   }
 
-  /**
-   * Update user permissions
-   * @param userId The user ID
-   * @param permissions The updated permissions
-   * @returns Observable of the operation result
-   */
   updateUserPermissions(
     userId: string,
     permissions: Permission[],
@@ -313,11 +280,6 @@ export class AdduserModalService {
     return of(true);
   }
 
-  /**
-   * Delete a user
-   * @param userId The user ID to delete
-   * @returns Observable of the operation result
-   */
   deleteUser(userId: string): Observable<boolean> {
     const initialLength = this.users.length;
     this.users = this.users.filter((user) => user.id !== userId);
@@ -331,32 +293,18 @@ export class AdduserModalService {
     return of(false);
   }
 
-  /**
-   * Check if username already exists
-   * @param username The username to check
-   * @returns Boolean indicating if username exists
-   */
   isUsernameTaken(username: string): boolean {
     return this.users.some(
       (user) => user.username.toLowerCase() === username.toLowerCase(),
     );
   }
 
-  /**
-   * Check if email already exists
-   * @param email The email to check
-   * @returns Boolean indicating if email exists
-   */
   isEmailTaken(email: string): boolean {
     return this.users.some(
       (user) => user.email.toLowerCase() === email.toLowerCase(),
     );
   }
 
-  /**
-   * Generate a unique ID
-   * @returns A unique string ID
-   */
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }

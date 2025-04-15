@@ -149,7 +149,7 @@ export class DashboardService {
   // Method to set items per page
   setItemsPerPage(count: number): void {
     this._itemsPerPage = count;
-    this._currentPage = 1; // Reset to first page when changing items per page
+    this._currentPage = 1;
     this.updatePaginationIndices();
     this.updateDisplayedUsers();
   }
