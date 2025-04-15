@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Role } from '../../models/role_md';
 import { Permission } from '../../models/permission_md';
 import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-adduser-modal',
@@ -260,8 +261,8 @@ export class AddModalComponent implements OnInit {
   @Output() closeModal = new EventEmitter<void>();
   @Output() userAdded = new EventEmitter<any>();
 
-  permissions: Permission[] = [];
   roles: Role[] = [];
+  permissions: Permission[] = [];
   userForm!: FormGroup;
   usernameTaken = false;
 
@@ -271,7 +272,11 @@ export class AddModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.permissions = this.adduserModalService.permissions;
+    this.adduserModalService.fetchPermissions();
+    this.adduserModalService.permissions$.subscribe((permissions) => {
+      this.permissions = permissions;
+      this.initForm();
+    });
     this.roles = this.adduserModalService.roles;
     this.initForm();
   }
@@ -291,18 +296,35 @@ export class AddModalComponent implements OnInit {
     };
 
     // Add dynamic form controls for permissions
-    this.permissions.forEach((permission, index) => {
-      formControls[`read_${index}`] = [permission.isReadable];
-      formControls[`write_${index}`] = [permission.isWritable];
-      formControls[`delete_${index}`] = [permission.isDeletable];
-    });
+    if (this.permissions && this.permissions.length > 0) {
+      this.permissions.forEach((permission, index) => {
+        formControls[`read_${index}`] = [
+          { value: permission.isReadable, disabled: true },
+        ];
+        formControls[`write_${index}`] = [
+          { value: permission.isWritable, disabled: true },
+        ];
+        formControls[`delete_${index}`] = [
+          { value: permission.isDeletable, disabled: true },
+        ];
+      });
+    }
+
+    if (this.userForm) {
+      // If form already exists, update it
+      const currentValues = this.userForm.getRawValue();
+      Object.keys(formControls).forEach((key) => {
+        if (currentValues[key] !== undefined) {
+          formControls[key][0] = currentValues[key];
+        }
+      });
+    }
 
     this.userForm = this.fb.group(formControls, {
       validators: this.passwordMatchValidator,
     });
   }
 
-  // Password match custom validator
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password')?.value;
     const confirmPassword = form.get('confirmPassword')?.value;
@@ -310,13 +332,11 @@ export class AddModalComponent implements OnInit {
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
-  // Check if a field is invalid and was touched
   isFieldInvalid(fieldName: string): boolean {
     const field = this.userForm.get(fieldName);
     return (field?.invalid && (field?.dirty || field?.touched)) || false;
   }
 
-  // Check if username is already taken
   checkUsername(): void {
     const username = this.userForm.get('username')?.value;
     if (username) {
@@ -324,23 +344,24 @@ export class AddModalComponent implements OnInit {
     }
   }
 
-  // Update permissions when role changes
   onRoleChange(): void {
     const selectedRole = this.userForm.get('role')?.value;
-    if (selectedRole) {
+    if (selectedRole && this.permissions) {
       const defaultPermissions =
         this.adduserModalService.getDefaultPermissionsForRole(selectedRole.id);
 
-      // Update permission checkboxes
       defaultPermissions.forEach((permission, index) => {
-        this.userForm.get(`read_${index}`)?.setValue(permission.isReadable);
-        this.userForm.get(`write_${index}`)?.setValue(permission.isWritable);
-        this.userForm.get(`delete_${index}`)?.setValue(permission.isDeletable);
+        const readControl = this.userForm.get(`read_${index}`);
+        const writeControl = this.userForm.get(`write_${index}`);
+        const deleteControl = this.userForm.get(`delete_${index}`);
+
+        if (readControl) readControl.setValue(permission.isReadable);
+        if (writeControl) writeControl.setValue(permission.isWritable);
+        if (deleteControl) deleteControl.setValue(permission.isDeletable);
       });
     }
   }
 
-  // Add user method that will be called on form submission
   addUser(): void {
     if (this.userForm.invalid) {
       // Mark all fields as touched to trigger validation messages
@@ -350,10 +371,8 @@ export class AddModalComponent implements OnInit {
       return;
     }
 
-    // Extract form values
-    const formValues = this.userForm.value;
+    const formValues = this.userForm.getRawValue();
 
-    // Prepare permissions data
     const userPermissions = this.permissions.map((permission, index) => {
       return new Permission(
         permission.id,
@@ -364,24 +383,27 @@ export class AddModalComponent implements OnInit {
       );
     });
 
-    // Create payload using the service
-    const newUser = this.adduserModalService.createUser({
-      userId: formValues.userId,
-      firstName: formValues.firstName,
-      lastName: formValues.lastName,
-      email: formValues.email,
-      mobile: formValues.mobile,
-      role: formValues.role,
-      username: formValues.username,
-      password: formValues.password,
-      permissions: userPermissions,
-    });
-
-    // Emit event that user was added
-    this.userAdded.emit(newUser);
-
-    // Close modal after successful submission
-    this.close();
+    this.adduserModalService
+      .createUser({
+        userId: formValues.userId,
+        firstName: formValues.firstName,
+        lastName: formValues.lastName,
+        email: formValues.email,
+        mobile: formValues.mobile,
+        role: formValues.role,
+        username: formValues.username,
+        password: formValues.password,
+        permissions: userPermissions,
+      })
+      .subscribe({
+        next: (user) => {
+          this.userAdded.emit(user);
+          this.close();
+        },
+        error: (error) => {
+          console.error('Error adding user:', error);
+        },
+      });
   }
 
   close() {
