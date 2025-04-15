@@ -132,55 +132,38 @@ import { Permission } from '../../models/permission_md';
           <div class="w-1/4 text-center">Delete</div>
         </div>
         <div class="mb-2 w-full px-2">
-          <div class="flex items-center border-b border-gray-200 py-3">
-            <div class="w-1/4">Super Admin</div>
+          <!-- Added *ngFor to iterate through permissions array -->
+          <div
+            *ngFor="let permission of permissions"
+            class="flex items-center border-b border-gray-200 py-3"
+          >
+            <div class="w-1/4">{{ permission.name }}</div>
             <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
+              <!-- Fixed event handling by passing $event directly -->
+              <input
+                type="checkbox"
+                [checked]="permission.isReadable"
+                (change)="updatePermission(permission, 'isReadable', $event)"
+                class="h-5 w-5 text-blue-600"
+              />
             </div>
             <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
+              <!-- Fixed event handling by passing $event directly -->
+              <input
+                type="checkbox"
+                [checked]="permission.isWritable"
+                (change)="updatePermission(permission, 'isWritable', $event)"
+                class="h-5 w-5 text-blue-600"
+              />
             </div>
             <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-            </div>
-          </div>
-
-          <div class="flex items-center border-b border-gray-200 py-3">
-            <div class="w-1/4">Admin</div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" class="h-5 w-5 text-blue-600" />
-            </div>
-          </div>
-
-          <div class="flex items-center border-b border-gray-200 py-3">
-            <div class="w-1/4">Employee</div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" class="h-5 w-5 text-blue-600" />
-            </div>
-          </div>
-
-          <div class="flex items-center py-3">
-            <div class="w-1/4">Lorem Ipsum</div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
-            </div>
-            <div class="flex w-1/4 justify-center">
-              <input type="checkbox" checked class="h-5 w-5 text-blue-600" />
+              <!-- Fixed event handling by passing $event directly -->
+              <input
+                type="checkbox"
+                [checked]="permission.isDeletable"
+                (change)="updatePermission(permission, 'isDeletable', $event)"
+                class="h-5 w-5 text-blue-600"
+              />
             </div>
           </div>
         </div>
@@ -215,11 +198,21 @@ export class AddModalComponent {
   ];
 
   permissions: Permission[] = [
-    new Permission('1', 'SuperAdmin'),
-    new Permission('2', 'Admin'),
-    new Permission('3', 'Employee'),
+    new Permission('1', 'SuperAdmin', true, true, true),
+    new Permission('2', 'Admin', true, false, false),
+    new Permission('3', 'Employee', true, false, false),
+    new Permission('4', 'Lorem Ipsum', true, true, true),
   ];
   selectedRole: Role | null = null;
+  // Added method to handle permission changes
+  updatePermission(
+    permission: Permission,
+    property: 'isReadable' | 'isWritable' | 'isDeletable',
+    event: Event,
+  ): void {
+    const target = event.target as HTMLInputElement;
+    permission[property] = target.checked;
+  }
 
   close() {
     this.closeModal.emit();
