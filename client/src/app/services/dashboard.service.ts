@@ -15,81 +15,7 @@ export class DashboardService {
 
   private displayedUsersSubject = new BehaviorSubject<User[]>([]);
   public displayedUsers$ = this.displayedUsersSubject.asObservable();
-  users: Array<User> = [
-    new User(
-      'u1',
-      'jdoe',
-      'John',
-      'Doe',
-      'jdoe@example.com',
-      new Date('2023-01-01'),
-      new Role('r1', 'Admin'),
-      [
-        new Permission('p1', 'Users', true, true, true),
-        new Permission('p2', 'Settings', true, false, false),
-      ],
-      '+1234567890',
-    ),
-    new User(
-      'u2',
-      'asmith',
-      'Alice',
-      'Smith',
-      'asmith@example.com',
-      new Date('2023-02-10'),
-      new Role('r2', 'Editor'),
-      [
-        new Permission('p3', 'Documents', true, true, false),
-        new Permission('p4', 'Photos', true, false, false),
-      ],
-      '+1987654321',
-    ),
-    new User(
-      'u3',
-      'bwayne',
-      'Bruce',
-      'Wayne',
-      'bwayne@example.com',
-      new Date('2023-03-05'),
-      new Role('r3', 'Viewer'),
-      [new Permission('p5', 'Reports', true, false, false)],
-    ),
-    new User(
-      'u4',
-      'ckent',
-      'Clark',
-      'Kent',
-      'ckent@example.com',
-      new Date('2023-04-20'),
-      new Role('r1', 'Admin'),
-      [
-        new Permission('p6', 'Dashboard', true, true, true),
-        new Permission('p7', 'Analytics', true, true, true),
-      ],
-      '+1122334455',
-    ),
-    new User(
-      'u5',
-      'dprince',
-      'Diana',
-      'Prince',
-      'dprince@example.com',
-      new Date('2023-05-18'),
-      new Role('r2', 'Editor'),
-      [new Permission('p8', 'Articles', true, true, true)],
-    ),
-    new User(
-      'u6',
-      'p.parker',
-      'Peter',
-      'Parker',
-      'pparker@example.com',
-      new Date('2023-06-22'),
-      new Role('r3', 'Viewer'),
-      [new Permission('p9', 'Media', true, false, false)],
-      '+1098765432',
-    ),
-  ];
+  users: Array<User> = [];
 
   private _currentPage: number = 1;
   private _itemsPerPage: number = 6;
@@ -168,6 +94,48 @@ export class DashboardService {
         // Fallback to mock data on error
         this.usersSubject.next(this.users);
         this.updateDisplayedUsers();
+      },
+    });
+  }
+
+  // Method to update a user
+  updateUser(user: User): void {
+    const url = `http://localhost:5083/api/Users/${user.id}`;
+    this.http.put<User>(url, user).subscribe({
+      next: (updatedUser) => {
+        const index = this.users.findIndex((u) => u.id === user.id);
+        if (index !== -1) {
+          this.users[index] = updatedUser;
+          this.usersSubject.next([...this.users]);
+          this.updateDisplayedUsers();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating user:', error);
+      },
+    });
+  }
+
+  // Method to delete a user
+  deleteUser(userId: string): void {
+    const url = `http://localhost:5083/api/Users/${userId}`;
+    this.http.delete(url).subscribe({
+      next: () => {
+        this.users = this.users.filter((user) => user.id !== userId);
+        this.usersSubject.next([...this.users]);
+
+        if (
+          this.displayedUsersSubject.value.length === 0 &&
+          this._currentPage > 1
+        ) {
+          this._currentPage--;
+        }
+
+        this.updatePaginationIndices();
+        this.updateDisplayedUsers();
+      },
+      error: (error) => {
+        console.error('Error deleting user:', error);
       },
     });
   }

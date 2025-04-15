@@ -94,10 +94,16 @@ import { AddModalComponent } from '../../components/add-modal/adduser-modal.comp
             {{ user.createdAt | date: 'd MMM, yyyy' }}
           </div>
           <div class="flex space-x-2">
-            <button class="text-blue-500 hover:text-blue-700">
+            <button
+              class="text-blue-500 hover:text-blue-700"
+              (click)="editUser(user)"
+            >
               <mat-icon>edit</mat-icon>
             </button>
-            <button class="text-red-500 hover:text-red-700">
+            <button
+              class="text-red-500 hover:text-red-700"
+              (click)="deleteUser(user.id, user.firstName)"
+            >
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -187,6 +193,17 @@ export class DashboardComponent implements OnInit {
 
     // fetch users from the service
     this.dashboardService.fetchUsers();
+  }
+
+  editUser(user: User): void {
+    console.log('Edit user:', user);
+  }
+
+  deleteUser(userId: string, userName: string): void {
+    // Confirm before deleting
+    if (confirm(`Are you sure you want to delete ${userName}?`)) {
+      this.dashboardService.deleteUser(userId);
+    }
   }
 
   updatePaginationInfo(): void {
