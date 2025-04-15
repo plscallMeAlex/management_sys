@@ -28,7 +28,7 @@ namespace server.Controllers
         public async Task<ActionResult<IEnumerable<PermissionDto>>> GetPermissions()
         {
             var permissions = await _context.Permissions.ToListAsync();
-            var permissionDtos = _mapper.Map<List<PermissionDto>>(permissions);
+            var permissionDtos = _mapper.Map<List<ResponsePermissionDto>>(permissions);
             return Ok(permissionDtos);
         }
     }
