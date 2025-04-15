@@ -2,6 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
+interface Document {
+  id: number;
+  title: string;
+  date: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-documentpg',
   standalone: true,
@@ -116,9 +123,94 @@ import { MatIconModule } from '@angular/material/icon';
           </button>
         </div>
       </div>
+
       <!-- document content -->
+      <div class="mt-4 w-full rounded-xl bg-white p-4">
+        <h2 class="mb-2 text-lg font-medium">List of documents</h2>
+        <p class="mb-4 text-sm text-gray-500">Lorem ipsum dolor sit amet</p>
+
+        <!-- line -->
+        <div class="mb-4 h-[1px] w-full bg-gray-200"></div>
+        <!-- Document List Table -->
+        <div class="w-full">
+          <div
+            *ngFor="let doc of documents"
+            class="mb-3 flex items-center border-b border-gray-200 py-4"
+          >
+            <div class="mr-4 flex-shrink-0">
+              <div
+                class="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50 text-blue-500"
+              >
+                <mat-icon>description</mat-icon>
+              </div>
+            </div>
+            <div class="flex flex-grow items-center justify-between">
+              <div>
+                <h3 class="font-medium text-gray-800">{{ doc.title }}</h3>
+                <p class="text-sm text-gray-500">{{ doc.date }}</p>
+              </div>
+              <div class="hidden text-sm text-gray-600 md:block">
+                {{ doc.description }}
+              </div>
+              <div class="flex items-center space-x-2">
+                <button class="rounded p-1 text-blue-500 hover:bg-blue-50">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="rounded p-1 text-blue-500 hover:bg-blue-50">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: ``,
 })
-export class DocumentpgComponent {}
+export class DocumentpgComponent {
+  documents: Document[] = [
+    {
+      id: 1,
+      title: 'Annual Report 2024',
+      date: 'April 1, 2024',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
+    },
+    {
+      id: 2,
+      title: 'Project Proposal',
+      date: 'April 5, 2024',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
+    },
+    {
+      id: 3,
+      title: 'Marketing Strategy',
+      date: 'April 8, 2024',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
+    },
+    {
+      id: 4,
+      title: 'Financial Analysis',
+      date: 'April 12, 2024',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
+    },
+    {
+      id: 5,
+      title: 'Client Feedback',
+      date: 'April 15, 2024',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
+    },
+    {
+      id: 6,
+      title: 'Meeting Notes',
+      date: 'April 20, 2024',
+      description:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
+    },
+  ];
+}
