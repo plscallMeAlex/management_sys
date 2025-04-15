@@ -62,7 +62,7 @@ export class DashboardService {
               userData.lastName,
               userData.email,
               userData.createdAt ? new Date(userData.createdAt) : new Date(),
-              new Role(userData.roleId || '', userData.roleName || 'User'),
+              new Role(userData.roleId || '', userData.role.name || ''),
               userData.permissions?.map(
                 (p: Permission) =>
                   new Permission(
