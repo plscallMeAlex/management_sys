@@ -12,5 +12,7 @@ namespace server.Models
         public bool IsReadable { get; set; } = false;
         public bool IsWritable { get; set; } = false;
         public bool IsDeletable { get; set; } = false;
+
+        public ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
     }
 }
