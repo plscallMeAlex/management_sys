@@ -191,7 +191,12 @@ namespace server.Controllers
         [HttpPost("DataTable")]
         public async Task<ActionResult<OrderResponseDto>> CreateOrderTB([FromBody] OrderDto dto)
         {
-            var user = await _context.Users.FindAsync(dto.OrderBy);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.UserPermissions)
+                .ThenInclude(up => up.Permission)
+                .FirstOrDefaultAsync(u => u.Id == dto.OrderBy);
+                
             if (user == null)
                 return NotFound($"User with ID '{dto.OrderBy}' not found.");
             
