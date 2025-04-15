@@ -13,6 +13,7 @@ namespace server.Data
         public MappingProfile()
         {
             CreateMap<User, UserDto>();
+            CreateMap<CreateUserDto, User>();
             CreateMap<Role, RoleDto>();
             CreateMap<UserPermission, UserPermissionDto>();
             CreateMap<Permission, PermissionDto>();
