@@ -22,6 +22,7 @@ Console.WriteLine($"Connection String: {connectionString}");
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
 // Configure DbContext with SQL Server and connection string
@@ -39,5 +40,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
 
 app.Run();
