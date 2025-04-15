@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { User } from '../models/user_md';
 import { Permission } from '../models/permission_md';
 import { Role } from '../models/role_md';
 import { BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DashboardService {
+  http = inject(HttpClient);
   private usersSubject = new BehaviorSubject<User[]>([]);
   public users$ = this.usersSubject.asObservable();
 
@@ -118,6 +120,56 @@ export class DashboardService {
 
   get totalPages(): number {
     return Math.ceil(this.users.length / this._itemsPerPage);
+  }
+
+  fetchUsers(): void {
+    const url = 'http://localhost:5083/api/Users';
+    this.http.get<any[]>(url).subscribe({
+      next: (usersData) => {
+        try {
+          // Map API data to your User model structure
+          const mappedUsers = usersData.map((userData) => {
+            return new User(
+              userData.id,
+              userData.userName,
+              userData.firstName,
+              userData.lastName,
+              userData.email,
+              userData.createdAt ? new Date(userData.createdAt) : new Date(),
+              new Role(userData.roleId || '', userData.roleName || 'User'),
+              userData.permissions?.map(
+                (p: Permission) =>
+                  new Permission(
+                    p.id,
+                    p.name,
+                    p.isReadable,
+                    p.isWritable,
+                    p.isDeletable,
+                  ),
+              ) || [],
+              userData.phone,
+            );
+          });
+
+          this.users = mappedUsers;
+          this.usersSubject.next(this.users);
+          this._currentPage = 1; // Reset to first page when fetching new data
+          this.updatePaginationIndices();
+          this.updateDisplayedUsers();
+        } catch (e) {
+          console.error('Error mapping user data:', e);
+          // Fallback to mock data if mapping fails
+          this.usersSubject.next(this.users);
+          this.updateDisplayedUsers();
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching users:', error);
+        // Fallback to mock data on error
+        this.usersSubject.next(this.users);
+        this.updateDisplayedUsers();
+      },
+    });
   }
 
   // Method to update displayed users based on pagination

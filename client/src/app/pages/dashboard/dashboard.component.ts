@@ -176,6 +176,8 @@ export class DashboardComponent implements OnInit {
     // Subscribe to the displayed users from the service
     this.dashboardService.displayedUsers$.subscribe((users) => {
       this.displayedUsers = users;
+      // Initialize pagination
+      this.updatePaginationInfo();
     });
 
     // Get total users count
@@ -183,8 +185,8 @@ export class DashboardComponent implements OnInit {
       this.totalUsers = users.length;
     });
 
-    // Initialize pagination
-    this.updatePaginationInfo();
+    // fetch users from the service
+    this.dashboardService.fetchUsers();
   }
 
   updatePaginationInfo(): void {
