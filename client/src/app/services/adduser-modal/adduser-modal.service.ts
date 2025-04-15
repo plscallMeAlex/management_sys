@@ -22,12 +22,7 @@ export class AdduserModalService {
   private permissionsSubject = new BehaviorSubject<Permission[]>([]);
   permissions$ = this.permissionsSubject.asObservable();
 
-  roles: Array<Role> = [
-    new Role('1', 'Super Admin'),
-    new Role('2', 'Admin'),
-    new Role('3', 'Employee'),
-    new Role('4', 'User'),
-  ];
+  roles: Array<Role> = [];
 
   // Store users in memory for demo purposes
   private users: User[] = [];
