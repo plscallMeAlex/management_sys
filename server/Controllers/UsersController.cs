@@ -62,21 +62,33 @@ namespace server.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser([FromBody] CreateUserDto dto)
         {
-           var user = _mapper.Map<User>(dto); // Map CreateUserDto to User
+            var roleExists = await _context.Roles.AnyAsync(r => r.Id == dto.RoleId);
+            if (!roleExists)
+                return NotFound($"Role with ID '{dto.RoleId}' not found."); 
 
-            // Attach permissions
-            if (dto.PermissionIds.Any())
+            if (dto.PermissionIds != null && dto.PermissionIds.Any())
             {
-                var permissions = await _context.Permissions
+                var validPermissionIds = await _context.Permissions
                     .Where(p => dto.PermissionIds.Contains(p.Id))
+                    .Select(p => p.Id)
                     .ToListAsync();
 
-                foreach (var permission in permissions)
+                var missingPermissions = dto.PermissionIds.Except(validPermissionIds).ToList();
+                if (missingPermissions.Any())
+                    return NotFound($"Permissions not found: {string.Join(", ", missingPermissions)}");
+            }
+
+            var user = _mapper.Map<User>(dto); // Map CreateUserDto to User
+
+            // Attach permissions
+            if (dto.PermissionIds != null && dto.PermissionIds.Any())
+            {
+                foreach (var permissionId in dto.PermissionIds)
                 {
                     user.UserPermissions.Add(new UserPermission
                     {
                         UserId = user.Id,
-                        PermissionId = permission.Id
+                        PermissionId = permissionId
                     });
                 }
             }
@@ -84,10 +96,17 @@ namespace server.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            var userDto = _mapper.Map<UserDto>(user); // Map to UserDto for response
+            var createdUser = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.UserPermissions)
+                .ThenInclude(up => up.Permission)
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            var userDto = _mapper.Map<UserDto>(createdUser); // Map to UserDto for response
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userDto);
         }
+
 
         // PUT: api/users/{id}
         [HttpPut("{id}")]
@@ -105,16 +124,28 @@ namespace server.Controllers
             if (existingUser == null)
                 return NotFound();
 
-            // Map the DTO to the existing user entity
+            var roleExists = await _context.Roles.AnyAsync(r => r.Id == dto.RoleId);
+            if (!roleExists)
+                return NotFound($"Role with ID '{dto.RoleId}' not found.");
+
+            if (dto.PermissionIds != null && dto.PermissionIds.Any())
+            {
+                var validPermissionIds = await _context.Permissions
+                    .Where(p => dto.PermissionIds.Contains(p.Id))
+                    .Select(p => p.Id)
+                    .ToListAsync();
+
+                var missingPermissions = dto.PermissionIds.Except(validPermissionIds).ToList();
+                if (missingPermissions.Any())
+                    return NotFound($"Permissions not found: {string.Join(", ", missingPermissions)}");
+            }
+
             _mapper.Map(dto, existingUser);
 
-            // Update UserPermissions
             if (dto.PermissionIds != null)
             {
-                // Remove existing permissions
                 _context.UserPermissions.RemoveRange(existingUser.UserPermissions);
 
-                // Add new permissions
                 foreach (var permissionId in dto.PermissionIds)
                 {
                     existingUser.UserPermissions.Add(new UserPermission
@@ -137,8 +168,9 @@ namespace server.Controllers
                 throw;
             }
 
-            return Ok(_mapper.Map<UserDto>(existingUser)); // Return updated user as UserDto
+            return Ok(_mapper.Map<UserDto>(existingUser));
         }
+
 
         // DELETE: api/users/{id}
         [HttpDelete("{id}")]
