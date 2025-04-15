@@ -185,5 +185,26 @@ namespace server.Controllers
 
             return NoContent();
         }
+
+
+        // POST Order: api/users/DataTable
+        [HttpPost("DataTable")]
+        public async Task<ActionResult<OrderResponseDto>> CreateOrderTB([FromBody] OrderDto dto)
+        {
+            var user = await _context.Users.FindAsync(dto.OrderBy);
+            if (user == null)
+                return NotFound($"User with ID '{dto.OrderBy}' not found.");
+            
+            var userDtos = _mapper.Map<List<UserDto>>(new List<User> { user });
+
+            var response = new OrderResponseDto{
+                DataSource = userDtos,
+                Page = dto.PageNumber,
+                PageSize = dto.PageSize,
+                TotalCount = dto.PageSize
+            };
+
+            return Ok(response);
+        }
     }
 }
