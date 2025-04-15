@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Role } from '../../models/role_md';
 import { Permission } from '../../models/permission_md';
+import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.service';
 
 @Component({
   selector: 'app-adduser-modal',
@@ -186,23 +187,20 @@ import { Permission } from '../../models/permission_md';
   `,
   styles: ``,
 })
-export class AddModalComponent {
+export class AddModalComponent implements OnInit {
   @Input() isOpen = false;
   @Output() closeModal = new EventEmitter<void>();
 
-  roles: Role[] = [
-    new Role('1', 'Super Admin'),
-    new Role('2', 'Admin'),
-    new Role('3', 'Employee'),
-    new Role('4', 'User'),
-  ];
+  permissions: Permission[] = [];
+  roles: Role[] = [];
 
-  permissions: Permission[] = [
-    new Permission('1', 'SuperAdmin', true, true, true),
-    new Permission('2', 'Admin', true, false, false),
-    new Permission('3', 'Employee', true, false, false),
-    new Permission('4', 'Lorem Ipsum', true, true, true),
-  ];
+  constructor(private adduserModalService: AdduserModalService) {}
+
+  ngOnInit(): void {
+    this.permissions = this.adduserModalService.permissions;
+    this.roles = this.adduserModalService.roles;
+  }
+
   selectedRole: Role | null = null;
   // Added method to handle permission changes
   updatePermission(
