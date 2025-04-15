@@ -35,10 +35,26 @@ export class AdduserModalService {
 
   constructor() {
     this.fetchPermissions();
+    this.fetchRoles();
   }
 
   getUsers(): Observable<User[]> {
     return this.usersSubject.asObservable();
+  }
+  fetchRoles(): void {
+    const url = 'http://localhost:5083/api/Roles';
+
+    this.http.get<any[]>(url).subscribe({
+      next: (rolesData) => {
+        const mapped = rolesData.map(
+          (role) => new Role(role.id, role.roleName),
+        );
+        this.roles = mapped; // 🔥 Emit the roles
+      },
+      error: (error) => {
+        console.error('Error fetching roles:', error);
+      },
+    });
   }
 
   fetchPermissions(): void {
