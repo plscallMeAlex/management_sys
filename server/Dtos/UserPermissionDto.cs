@@ -7,9 +7,9 @@ namespace server.Dtos
 {
     public class UserPermissionDto
     {
-        public string PermissionId { get; set; }
-        public string UserId { get; set; }
-    
-        public PermissionDto Permission { get; set; }
+        public string PermissionId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
+
+        public PermissionDto Permission { get; set; } = null!;
     }
 }
