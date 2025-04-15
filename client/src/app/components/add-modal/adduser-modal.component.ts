@@ -11,6 +11,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { Role } from '../../models/role_md';
 import { Permission } from '../../models/permission_md';
 import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.service';
+import { Observable } from 'rxjs';
+import { User } from '../../models/user_md';
 
 @Component({
   selector: 'app-adduser-modal',
@@ -23,13 +25,15 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
     >
       <div class="w-full max-w-4xl rounded-md bg-white shadow-lg">
         <div class="flex items-center justify-between border-b p-4">
-          <h2 class="text-xl font-medium">Add User</h2>
+          <h2 class="text-xl font-medium">
+            {{ isEditMode ? 'Edit User' : 'Add User' }}
+          </h2>
           <button class="text-gray-500 hover:text-gray-700" (click)="close()">
             <mat-icon>close</mat-icon>
           </button>
         </div>
 
-        <form [formGroup]="userForm" (ngSubmit)="addUser()">
+        <form [formGroup]="userForm" (ngSubmit)="saveUser()">
           <div class="px-6 pt-6">
             <div class="mb-4">
               <label class="mb-1 block text-sm font-medium"
@@ -41,6 +45,7 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
                 placeholder="User ID *"
                 class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 [ngClass]="{ 'border-red-500': isFieldInvalid('userId') }"
+                [disabled]="isEditMode"
               />
               <div
                 *ngIf="isFieldInvalid('userId')"
@@ -155,7 +160,7 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
                   Username is already taken
                 </div>
               </div>
-              <div>
+              <div *ngIf="!isEditMode">
                 <label class="mb-1 block text-sm font-medium"
                   >Password <span class="text-red-500">*</span></label
                 >
@@ -173,7 +178,7 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
                   Password is required
                 </div>
               </div>
-              <div>
+              <div *ngIf="!isEditMode">
                 <label class="mb-1 block text-sm font-medium"
                   >Confirm Password <span class="text-red-500">*</span></label
                 >
@@ -191,6 +196,59 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
                   class="mt-1 text-sm text-red-500"
                 >
                   Passwords do not match
+                </div>
+              </div>
+              <!-- Password change section for edit mode -->
+              <div *ngIf="isEditMode" class="col-span-2">
+                <div class="mb-1 flex items-center">
+                  <input
+                    type="checkbox"
+                    id="changePassword"
+                    (change)="togglePasswordChange($event)"
+                    class="mr-2 h-4 w-4"
+                  />
+                  <label for="changePassword" class="text-sm"
+                    >Change Password</label
+                  >
+                </div>
+                <div *ngIf="showPasswordFields" class="grid grid-cols-2 gap-4">
+                  <div>
+                    <input
+                      type="password"
+                      formControlName="password"
+                      placeholder="New Password"
+                      class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      [ngClass]="{
+                        'border-red-500': isFieldInvalid('password'),
+                      }"
+                    />
+                    <div
+                      *ngIf="isFieldInvalid('password')"
+                      class="mt-1 text-sm text-red-500"
+                    >
+                      Password is required
+                    </div>
+                  </div>
+                  <div>
+                    <input
+                      type="password"
+                      formControlName="confirmPassword"
+                      placeholder="Confirm New Password"
+                      class="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      [ngClass]="{
+                        'border-red-500': isFieldInvalid('confirmPassword'),
+                      }"
+                    />
+                    <div
+                      *ngIf="
+                        userForm.errors?.['passwordMismatch'] &&
+                        showPasswordFields
+                      "
+                      class="mt-1 text-sm text-red-500"
+                    >
+                      Passwords do not match
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -244,9 +302,15 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
             <button
               type="submit"
               class="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-              [disabled]="userForm.invalid || usernameTaken"
+              [disabled]="
+                userForm.invalid ||
+                usernameTaken ||
+                (!showPasswordFields &&
+                  isEditMode &&
+                  (isPasswordInvalid() || isPasswordMismatch()))
+              "
             >
-              Add User
+              {{ isEditMode ? 'Update User' : 'Add User' }}
             </button>
           </div>
         </form>
@@ -257,13 +321,17 @@ import { AdduserModalService } from '../../services/adduser-modal/adduser-modal.
 })
 export class AddModalComponent implements OnInit {
   @Input() isOpen = false;
+  @Input() isEditMode = false;
+  @Input() user: User | null = null;
   @Output() closeModal = new EventEmitter<void>();
   @Output() userAdded = new EventEmitter<any>();
+  @Output() userUpdated = new EventEmitter<any>();
 
-  permissions: Permission[] = [];
   roles: Role[] = [];
+  permissions: Permission[] = [];
   userForm!: FormGroup;
   usernameTaken = false;
+  showPasswordFields = false;
 
   constructor(
     private adduserModalService: AdduserModalService,
@@ -271,7 +339,11 @@ export class AddModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.permissions = this.adduserModalService.permissions;
+    this.adduserModalService.fetchPermissions();
+    this.adduserModalService.permissions$.subscribe((permissions) => {
+      this.permissions = permissions;
+      this.initForm();
+    });
     this.roles = this.adduserModalService.roles;
     this.initForm();
   }
@@ -279,69 +351,152 @@ export class AddModalComponent implements OnInit {
   initForm(): void {
     // Create base form controls
     const formControls: any = {
-      userId: ['', Validators.required],
+      userId: [{ value: '', disabled: this.isEditMode }, Validators.required],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       mobile: [''],
       role: [null],
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-      confirmPassword: ['', Validators.required],
+      username: [{ value: '', disabled: this.isEditMode }, Validators.required],
+      password: ['', this.isEditMode ? [] : Validators.required],
+      confirmPassword: ['', this.isEditMode ? [] : Validators.required],
     };
 
     // Add dynamic form controls for permissions
-    this.permissions.forEach((permission, index) => {
-      formControls[`read_${index}`] = [permission.isReadable];
-      formControls[`write_${index}`] = [permission.isWritable];
-      formControls[`delete_${index}`] = [permission.isDeletable];
-    });
+    if (this.permissions && this.permissions.length > 0) {
+      this.permissions.forEach((permission, index) => {
+        formControls[`read_${index}`] = [false];
+        formControls[`write_${index}`] = [false];
+        formControls[`delete_${index}`] = [false];
+      });
+    }
 
     this.userForm = this.fb.group(formControls, {
       validators: this.passwordMatchValidator,
     });
+
+    // If in edit mode and user is provided, populate the form
+    if (this.isEditMode && this.user) {
+      this.populateFormForEdit();
+    }
   }
 
-  // Password match custom validator
+  populateFormForEdit(): void {
+    if (!this.user) return;
+
+    this.userForm.patchValue({
+      userId: this.user.id,
+      firstName: this.user.firstName,
+      lastName: this.user.lastName,
+      email: this.user.email,
+      mobile: this.user.phone || '',
+      role: this.roles.find((role) => role.id === this.user?.role?.id) || null,
+      username: this.user.username,
+      // Password fields are intentionally left empty in edit mode
+    });
+
+    // Set permission values
+    if (this.user.permissions && this.permissions) {
+      this.user.permissions.forEach((userPermission) => {
+        const permissionIndex = this.permissions.findIndex(
+          (p) => p.id === userPermission.id,
+        );
+        if (permissionIndex !== -1) {
+          this.userForm
+            .get(`read_${permissionIndex}`)
+            ?.setValue(userPermission.isReadable);
+          this.userForm
+            .get(`write_${permissionIndex}`)
+            ?.setValue(userPermission.isWritable);
+          this.userForm
+            .get(`delete_${permissionIndex}`)
+            ?.setValue(userPermission.isDeletable);
+        }
+      });
+    }
+  }
+
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password')?.value;
     const confirmPassword = form.get('confirmPassword')?.value;
 
+    if (!password && !confirmPassword) {
+      return null; // No validation needed if both are empty (edit mode, no password change)
+    }
+
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
-  // Check if a field is invalid and was touched
   isFieldInvalid(fieldName: string): boolean {
     const field = this.userForm.get(fieldName);
     return (field?.invalid && (field?.dirty || field?.touched)) || false;
   }
 
-  // Check if username is already taken
+  isPasswordInvalid(): boolean {
+    const passwordField = this.userForm.get('password');
+    return (
+      (this.showPasswordFields &&
+        passwordField?.invalid &&
+        (passwordField?.dirty || passwordField?.touched)) ||
+      false
+    );
+  }
+
+  isPasswordMismatch(): boolean {
+    return (
+      this.showPasswordFields && !!this.userForm.errors?.['passwordMismatch']
+    );
+  }
+
   checkUsername(): void {
+    if (this.isEditMode) return; // Skip check in edit mode
+
     const username = this.userForm.get('username')?.value;
     if (username) {
       this.usernameTaken = this.adduserModalService.isUsernameTaken(username);
     }
   }
 
-  // Update permissions when role changes
+  togglePasswordChange(event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.showPasswordFields = isChecked;
+
+    const passwordControl = this.userForm.get('password');
+    const confirmPasswordControl = this.userForm.get('confirmPassword');
+
+    if (isChecked) {
+      passwordControl?.setValidators(Validators.required);
+      confirmPasswordControl?.setValidators(Validators.required);
+    } else {
+      passwordControl?.clearValidators();
+      confirmPasswordControl?.clearValidators();
+      passwordControl?.setValue('');
+      confirmPasswordControl?.setValue('');
+    }
+
+    passwordControl?.updateValueAndValidity();
+    confirmPasswordControl?.updateValueAndValidity();
+  }
+
   onRoleChange(): void {
     const selectedRole = this.userForm.get('role')?.value;
-    if (selectedRole) {
+    if (selectedRole && this.permissions) {
       const defaultPermissions =
         this.adduserModalService.getDefaultPermissionsForRole(selectedRole.id);
 
-      // Update permission checkboxes
       defaultPermissions.forEach((permission, index) => {
-        this.userForm.get(`read_${index}`)?.setValue(permission.isReadable);
-        this.userForm.get(`write_${index}`)?.setValue(permission.isWritable);
-        this.userForm.get(`delete_${index}`)?.setValue(permission.isDeletable);
+        const readControl = this.userForm.get(`read_${index}`);
+        const writeControl = this.userForm.get(`write_${index}`);
+        const deleteControl = this.userForm.get(`delete_${index}`);
+
+        if (readControl) readControl.setValue(permission.isReadable);
+        if (writeControl) writeControl.setValue(permission.isWritable);
+        if (deleteControl) deleteControl.setValue(permission.isDeletable);
       });
     }
   }
 
-  // Add user method that will be called on form submission
-  addUser(): void {
+  saveUser(): void {
     if (this.userForm.invalid) {
       // Mark all fields as touched to trigger validation messages
       Object.keys(this.userForm.controls).forEach((key) => {
@@ -350,10 +505,8 @@ export class AddModalComponent implements OnInit {
       return;
     }
 
-    // Extract form values
-    const formValues = this.userForm.value;
+    const formValues = this.userForm.getRawValue();
 
-    // Prepare permissions data
     const userPermissions = this.permissions.map((permission, index) => {
       return new Permission(
         permission.id,
@@ -364,29 +517,69 @@ export class AddModalComponent implements OnInit {
       );
     });
 
-    // Create payload using the service
-    const newUser = this.adduserModalService.createUser({
-      userId: formValues.userId,
+    if (this.isEditMode) {
+      this.updateUser(formValues, userPermissions);
+    } else {
+      this.addUser(formValues, userPermissions);
+    }
+  }
+
+  addUser(formValues: any, userPermissions: Permission[]): void {
+    this.adduserModalService
+      .createUser({
+        userId: formValues.userId,
+        firstName: formValues.firstName,
+        lastName: formValues.lastName,
+        email: formValues.email,
+        mobile: formValues.mobile,
+        role: formValues.role,
+        username: formValues.username,
+        password: formValues.password,
+        permissions: userPermissions,
+      })
+      .subscribe({
+        next: (user) => {
+          this.userAdded.emit(user);
+          this.close();
+        },
+        error: (error) => {
+          console.error('Error adding user:', error);
+        },
+      });
+  }
+
+  updateUser(formValues: any, userPermissions: Permission[]): void {
+    if (!this.user) return;
+
+    const updateUserData = {
+      id: this.user.id,
       firstName: formValues.firstName,
       lastName: formValues.lastName,
       email: formValues.email,
-      mobile: formValues.mobile,
-      role: formValues.role,
-      username: formValues.username,
-      password: formValues.password,
-      permissions: userPermissions,
+      phone: formValues.mobile || '',
+      userName: this.user.username, // Use original username
+      password: this.showPasswordFields ? formValues.password : undefined, // Include password only if changed
+      roleId: formValues.role?.id || '',
+      permissionIds: userPermissions
+        .filter((p) => p.isReadable || p.isWritable || p.isDeletable)
+        .map((p) => p.id),
+    };
+
+    this.adduserModalService.updateUser(updateUserData).subscribe({
+      next: (updatedUser) => {
+        this.userUpdated.emit(updatedUser);
+        this.close();
+      },
+      error: (error) => {
+        console.error('Error updating user:', error);
+      },
     });
-
-    // Emit event that user was added
-    this.userAdded.emit(newUser);
-
-    // Close modal after successful submission
-    this.close();
   }
 
   close() {
     this.userForm.reset();
     this.usernameTaken = false;
+    this.showPasswordFields = false;
     this.closeModal.emit();
   }
 }

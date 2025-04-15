@@ -18,6 +18,7 @@ namespace server.Data
             CreateMap<Role, RoleDto>();
             CreateMap<UserPermission, UserPermissionDto>();
             CreateMap<Permission, PermissionDto>();
+            CreateMap<Permission, ResponsePermissionDto>();
         }
     }
 }

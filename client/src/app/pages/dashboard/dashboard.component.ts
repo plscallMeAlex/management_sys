@@ -94,10 +94,16 @@ import { AddModalComponent } from '../../components/add-modal/adduser-modal.comp
             {{ user.createdAt | date: 'd MMM, yyyy' }}
           </div>
           <div class="flex space-x-2">
-            <button class="text-blue-500 hover:text-blue-700">
+            <button
+              class="text-blue-500 hover:text-blue-700"
+              (click)="editUser(user)"
+            >
               <mat-icon>edit</mat-icon>
             </button>
-            <button class="text-red-500 hover:text-red-700">
+            <button
+              class="text-red-500 hover:text-red-700"
+              (click)="deleteUser(user.id, user.firstName)"
+            >
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -147,6 +153,8 @@ import { AddModalComponent } from '../../components/add-modal/adduser-modal.comp
       </div>
       <app-adduser-modal
         [isOpen]="isUserModalOpen"
+        [isEditMode]="isEditMode"
+        [user]="selectedUser"
         (closeModal)="closeUserModal()"
       ></app-adduser-modal>
     </div>
@@ -169,6 +177,8 @@ export class DashboardComponent implements OnInit {
   canGoForward: boolean = false;
   canGoBackward: boolean = false;
   isUserModalOpen: boolean = false;
+  isEditMode: boolean = false;
+  selectedUser: User | null = null;
 
   constructor(private dashboardService: DashboardService) {}
 
@@ -176,6 +186,8 @@ export class DashboardComponent implements OnInit {
     // Subscribe to the displayed users from the service
     this.dashboardService.displayedUsers$.subscribe((users) => {
       this.displayedUsers = users;
+      // Initialize pagination
+      this.updatePaginationInfo();
     });
 
     // Get total users count
@@ -183,8 +195,15 @@ export class DashboardComponent implements OnInit {
       this.totalUsers = users.length;
     });
 
-    // Initialize pagination
-    this.updatePaginationInfo();
+    // fetch users from the service
+    this.dashboardService.fetchUsers();
+  }
+
+  deleteUser(userId: string, userName: string): void {
+    // Confirm before deleting
+    if (confirm(`Are you sure you want to delete ${userName}?`)) {
+      this.dashboardService.deleteUser(userId);
+    }
   }
 
   updatePaginationInfo(): void {
@@ -214,11 +233,20 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  editUser(user: User): void {
+    this.isEditMode = true;
+    this.selectedUser = user;
+    this.isUserModalOpen = true;
+  }
   openUserModal(): void {
+    this.isEditMode = false;
+    this.selectedUser = null;
     this.isUserModalOpen = true;
   }
 
   closeUserModal(): void {
     this.isUserModalOpen = false;
+    this.selectedUser = null;
+    this.dashboardService.fetchUsers();
   }
 }
