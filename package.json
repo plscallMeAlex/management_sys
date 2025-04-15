@@ -1,0 +1,17 @@
+{
+  "name": "management_sys",
+  "version": "1.0.0",
+  "description": "For practicing a new stack before doing a real thing",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"cd client && ng serve\" \"cd server && dotnet run\"",
+    "int": "concurrently \"cd client && npm install\" \"cd server && dotnet restore\"",
+    "mg": "cd server && dotnet ef migrations add InitialCreate && dotnet ef database update"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
