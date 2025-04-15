@@ -1,6 +1,9 @@
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
+using AutoMapper;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +35,7 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
