@@ -239,5 +239,7 @@ export class DashboardComponent implements OnInit {
 
   closeUserModal(): void {
     this.isUserModalOpen = false;
+
+    this.dashboardService.fetchUsers(); // Refresh the user list after closing the modal
   }
 }
