@@ -153,6 +153,8 @@ import { AddModalComponent } from '../../components/add-modal/adduser-modal.comp
       </div>
       <app-adduser-modal
         [isOpen]="isUserModalOpen"
+        [isEditMode]="isEditMode"
+        [user]="selectedUser"
         (closeModal)="closeUserModal()"
       ></app-adduser-modal>
     </div>
@@ -175,6 +177,8 @@ export class DashboardComponent implements OnInit {
   canGoForward: boolean = false;
   canGoBackward: boolean = false;
   isUserModalOpen: boolean = false;
+  isEditMode: boolean = false;
+  selectedUser: User | null = null;
 
   constructor(private dashboardService: DashboardService) {}
 
@@ -193,10 +197,6 @@ export class DashboardComponent implements OnInit {
 
     // fetch users from the service
     this.dashboardService.fetchUsers();
-  }
-
-  editUser(user: User): void {
-    console.log('Edit user:', user);
   }
 
   deleteUser(userId: string, userName: string): void {
@@ -233,13 +233,20 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  editUser(user: User): void {
+    this.isEditMode = true;
+    this.selectedUser = user;
+    this.isUserModalOpen = true;
+  }
   openUserModal(): void {
+    this.isEditMode = false;
+    this.selectedUser = null;
     this.isUserModalOpen = true;
   }
 
   closeUserModal(): void {
     this.isUserModalOpen = false;
-
-    this.dashboardService.fetchUsers(); // Refresh the user list after closing the modal
+    this.selectedUser = null;
+    this.dashboardService.fetchUsers();
   }
 }

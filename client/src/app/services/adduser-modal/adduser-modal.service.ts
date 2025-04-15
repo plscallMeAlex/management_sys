@@ -8,6 +8,7 @@ import {
   of,
   throwError,
   tap,
+  map,
 } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { User } from '../../models/user_md';
@@ -18,6 +19,7 @@ import { User } from '../../models/user_md';
 export class AdduserModalService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:5083/api/Users';
+  private updateApiUrl = 'http://localhost:5043/api/Users';
   private permissionsSubject = new BehaviorSubject<Permission[]>([]);
   permissions$ = this.permissionsSubject.asObservable();
 
@@ -186,6 +188,108 @@ export class AdduserModalService {
         );
       }),
     );
+  }
+
+  /**
+   * Update an existing user
+   * @param userData The user data to update
+   * @returns The updated user object
+   */
+  updateUser(userData: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    userName: string;
+    password?: string;
+    roleId: string;
+    permissionIds: string[];
+  }): Observable<User> {
+    console.log('User update payload:', userData);
+
+    // Create a copy of userData to avoid modifying the original
+    const updatePayload = { ...userData };
+
+    // Remove password if it's undefined (not being updated)
+    if (!updatePayload.password) {
+      delete updatePayload.password;
+    }
+
+    const updateUrl = `${this.updateApiUrl}/${userData.id}`;
+
+    return this.http.put<any>(updateUrl, updatePayload).pipe(
+      map((responseData) => {
+        console.log('Server response for update:', responseData);
+
+        // Create updated permissions array
+        const updatedPermissions = this.mapPermissionIdsToObjects(
+          userData.permissionIds,
+        );
+
+        // If the response is minimal, use the sent data to construct the user object
+        const updatedUser = new User(
+          userData.id,
+          userData.userName,
+          userData.firstName,
+          userData.lastName,
+          userData.email,
+          // Keep the original created date if we have the user in our cache
+          this.users.find((u) => u.id === userData.id)?.createdAt || new Date(),
+          new Role(
+            userData.roleId,
+            this.roles.find((r) => r.id === userData.roleId)?.name ||
+              'Unknown Role',
+          ),
+          updatedPermissions,
+          userData.phone || '',
+        );
+
+        // Update in local cache
+        const userIndex = this.users.findIndex((u) => u.id === userData.id);
+        if (userIndex !== -1) {
+          this.users[userIndex] = updatedUser;
+        } else {
+          this.users.push(updatedUser);
+        }
+        this.usersSubject.next([...this.users]);
+
+        return updatedUser;
+      }),
+      catchError((error) => {
+        console.error('Error updating user:', error);
+        return throwError(
+          () => new Error('Failed to update user. Please try again.'),
+        );
+      }),
+    );
+  }
+
+  /**
+   * Map permission IDs to full Permission objects with correct attributes
+   * @param permissionIds Array of permission IDs
+   * @returns Array of Permission objects
+   */
+  private mapPermissionIdsToObjects(permissionIds: string[]): Permission[] {
+    const allPermissions = this.permissionsSubject.getValue();
+
+    return permissionIds.map((id) => {
+      const permissionDef = allPermissions.find((p) => p.id === id);
+
+      if (!permissionDef) {
+        // Return default permission if definition not found
+        return new Permission(id, 'Unknown Permission', true, false, false);
+      }
+
+      // Return permission with all attributes set to true since it was selected
+      return new Permission(
+        id,
+        permissionDef.name,
+        true, // We assume read permission if included
+        true, // We assume write permission if included
+        true, // We assume delete permission if included
+      );
+    });
   }
 
   /**
