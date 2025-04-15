@@ -8,6 +8,6 @@ namespace server.Dtos
     public class PermissionDto
     {
         public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
+        public string PermissionName { get; set; } = string.Empty;
     }
 }

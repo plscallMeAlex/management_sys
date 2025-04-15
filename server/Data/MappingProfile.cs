@@ -14,6 +14,7 @@ namespace server.Data
         {
             CreateMap<User, UserDto>();
             CreateMap<CreateUserDto, User>();
+            CreateMap<UpdateUserDto, User>();
             CreateMap<Role, RoleDto>();
             CreateMap<UserPermission, UserPermissionDto>();
             CreateMap<Permission, PermissionDto>();

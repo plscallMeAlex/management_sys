@@ -91,12 +91,39 @@ namespace server.Controllers
 
         // PUT: api/users/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(string id, [FromBody] User user)
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto dto)
         {
-            if (id != user.Id)
-                return BadRequest();
+            if (id != dto.Id)
+                return BadRequest("User ID mismatch.");
 
-            _context.Entry(user).State = EntityState.Modified;
+            var existingUser = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.UserPermissions)
+                .ThenInclude(up => up.Permission)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (existingUser == null)
+                return NotFound();
+
+            // Map the DTO to the existing user entity
+            _mapper.Map(dto, existingUser);
+
+            // Update UserPermissions
+            if (dto.PermissionIds != null)
+            {
+                // Remove existing permissions
+                _context.UserPermissions.RemoveRange(existingUser.UserPermissions);
+
+                // Add new permissions
+                foreach (var permissionId in dto.PermissionIds)
+                {
+                    existingUser.UserPermissions.Add(new UserPermission
+                    {
+                        UserId = id,
+                        PermissionId = permissionId
+                    });
+                }
+            }
 
             try
             {
@@ -106,10 +133,11 @@ namespace server.Controllers
             {
                 if (!_context.Users.Any(u => u.Id == id))
                     return NotFound();
+
                 throw;
             }
 
-            return NoContent();
+            return Ok(_mapper.Map<UserDto>(existingUser)); // Return updated user as UserDto
         }
 
         // DELETE: api/users/{id}
