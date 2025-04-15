@@ -18,7 +18,6 @@ namespace server.Models
         public string? RoleId { get; set; }
         public Role? Role { get; set; } = null;
 
-        public string? PermissionId { get; set; }
-        public Permission? Permission { get; set; } = null;
+        public ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
     }
 }
