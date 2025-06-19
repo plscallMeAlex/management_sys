@@ -1,4 +1,4 @@
-name: Notify Teams on Pull Request
+name: Notify Microsoft Teams on PR
 
 on:
   pull_request:
@@ -13,13 +13,21 @@ jobs:
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
+          # Extract PR details
           pr_title="${{ github.event.pull_request.title }}"
           pr_url="${{ github.event.pull_request.html_url }}"
           pr_user="${{ github.event.pull_request.user.login }}"
           pr_body="${{ github.event.pull_request.body }}"
 
-          message="{
-            \"text\": \"📣 *New Pull Request*\n👤 Author: ${pr_user}\n🔖 Title: ${pr_title}\n📝 Description: ${pr_body}\n🔗 [View PR](${pr_url})\"
-          }"
+          # Construct JSON payload using jq to handle escaping safely
+          payload=$(jq -n \
+            --arg title "$pr_title" \
+            --arg url "$pr_url" \
+            --arg user "$pr_user" \
+            --arg body "$pr_body" \
+            '{ text: "📣 *New Pull Request*\n👤 Author: \($user)\n🔖 Title: \($title)\n📝 Description: \($body)\n🔗 \($url)" }')
 
-          curl -H "Content-Type: application/json" -d "$message" "$TEAMS_WEBHOOK_URL"
+          # Send to Teams via webhook
+          curl -H "Content-Type: application/json" \
+               -d "$payload" \
+               "$TEAMS_WEBHOOK_URL"
