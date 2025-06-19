@@ -13,13 +13,22 @@ jobs:
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
-          # Extract PR details
+          # Debug: Show webhook length and first 20 characters
+          echo "Webhook length: ${#TEAMS_WEBHOOK_URL}"
+          echo "Webhook prefix: ${TEAMS_WEBHOOK_URL:0:20}"
+
+          # Extract PR data
           pr_title="${{ github.event.pull_request.title }}"
           pr_url="${{ github.event.pull_request.html_url }}"
           pr_user="${{ github.event.pull_request.user.login }}"
           pr_body="${{ github.event.pull_request.body }}"
+          
+          # Default body if empty
+          if [ -z "$pr_body" ]; then
+            pr_body="(No description provided)"
+          fi
 
-          # Construct JSON payload using jq to handle escaping safely
+          # Create JSON payload using jq (safe escaping)
           payload=$(jq -n \
             --arg title "$pr_title" \
             --arg url "$pr_url" \
@@ -27,7 +36,10 @@ jobs:
             --arg body "$pr_body" \
             '{ text: "📣 *New Pull Request*\n👤 Author: \($user)\n🔖 Title: \($title)\n📝 Description: \($body)\n🔗 \($url)" }')
 
-          # Send to Teams via webhook
-          curl -H "Content-Type: application/json" \
-               -d "$payload" \
-               "$TEAMS_WEBHOOK_URL"
+          # Debug: show payload
+          echo "Payload:"
+          echo "$payload"
+
+          # Send to Microsoft Teams
+          curl -s -X POST -H "Content-Type: application/json" \
+            -d "$payload" "$TEAMS_WEBHOOK_URL"
